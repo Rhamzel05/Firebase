@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Data Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Live Sensor Data</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Temperature (°C)</th>
+                <th>Humidity (%)</th>
+                <th>Daylight</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody id="sensorTableBody">
+            
+        </tbody>
+    </table>
+
+    <script>
+        const apiUrl = "https://firestore.googleapis.com/v1/projects/fir-add02/databases/(default)/documents/sensorData?key=AIzaSyCJ-OoMjfBPuVYnKHQY0RNVnjvZH3etuQw";
+
+        function fetchSensorData() {
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById("sensorTableBody");
+                    tableBody.innerHTML = ""; 
+
+                    if (data.documents) {
+                        
+                        const sortedDocs = data.documents.sort((a, b) => {
+                            return new Date(b.fields.timestamp.stringValue) - new Date(a.fields.timestamp.stringValue);
+                        });
+
+                        sortedDocs.forEach(doc => {
+                            const fields = doc.fields;
+                            const row = `<tr>
+                                <td>${fields.temperature.stringValue}</td>
+                                <td>${fields.humidity.stringValue}</td>
+                                <td>${fields.daylight.stringValue}</td>
+                                <td>${fields.timestamp.stringValue}</td>
+                            </tr>`;
+                            tableBody.innerHTML += row;
+                        });
+                    } else {
+                        tableBody.innerHTML = "<tr><td colspan='4'>No data available</td></tr>";
+                    }
+                })
+                .catch(error => console.error("Error fetching data:", error));
+        }
+
+     
+        fetchSensorData();
+        setInterval(fetchSensorData, 5000);
+    </script>
+
+</body>
+</html>
